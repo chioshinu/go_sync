@@ -3,26 +3,27 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 )
 
 type Data struct {
-	data map[int]int
+	data sync.Map
 	// mutex sync.RWMutex
 }
 
-func (d *Data) ReadRandom() (int, int, bool) {
+func (d *Data) ReadRandom() (int, interface{}, bool) {
 	// d.mutex.RLock()
 	// defer d.mutex.RUnlock()
 
 	key := rand.Intn(100)
-	val, ok := d.data[key]
+	val, ok := d.data.Load(key)
 	return key, val, ok
 }
 
 func (d *Data) Write(i int) {
 	// d.mutex.Lock()
 	// defer d.mutex.Unlock()
-	d.data[i] = i
+	d.data.Store(i, i)
 }
 
 func writeLoop(d *Data) {
@@ -43,7 +44,7 @@ func ReadLoop(d *Data, name string) {
 func main() {
 	var d = &Data{
 		// mutex: sync.RWMutex{},
-		data: make(map[int]int),
+		data: sync.Map{},
 	}
 	go writeLoop(d)
 	go ReadLoop(d, "first")
